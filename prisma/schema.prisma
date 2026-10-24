@@ -1,0 +1,248 @@
+// Prisma schema for SocialHub Unified Social Media Publishing Dashboard
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum PlatformType {
+  LINKEDIN
+  FACEBOOK
+  INSTAGRAM
+  WHATSAPP
+  GOOGLE_BUSINESS
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PROCESSING
+  PUBLISHED
+  PARTIALLY_PUBLISHED
+  FAILED
+  CANCELLED
+}
+
+enum TargetPublishStatus {
+  PENDING
+  SCHEDULED
+  PROCESSING
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+}
+
+enum AccountStatus {
+  CONNECTED
+  EXPIRED
+  REVOKED
+  DISCONNECTED
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model User {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  email        String     @unique
+  passwordHash String
+  name         String
+  role         String     @default("ADMIN")
+  avatarUrl    String?
+  timezone     String     @default("UTC")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("users")
+}
+
+model ConnectedAccount {
+  id                     String         @id @default(auto()) @map("_id") @db.ObjectId
+  platform               PlatformType
+  accountName            String
+  accountType            String         @default("PAGE")
+  avatarUrl              String?
+  externalId             String
+  accessTokenEncrypted   String
+  refreshTokenEncrypted  String?
+  tokenExpiresAt         DateTime?
+  scopes                 String[]
+  metadata               Json?
+  status                 AccountStatus  @default(CONNECTED)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  @@unique([platform, externalId])
+  @@map("connected_accounts")
+}
+
+model MediaAsset {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  fileName    String
+  fileSize    Int
+  mimeType    String
+  mediaType   MediaType
+  url         String
+  storageKey  String
+  thumbnailUrl String?
+  width       Int?
+  height      Int?
+  duration    Float?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("media_assets")
+}
+
+model SocialPost {
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
+  mainCaption   String
+  status        PostStatus   @default(DRAFT)
+  scheduledTime DateTime?
+  publishedAt   DateTime?
+  tags          String[]     @default([])
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@map("social_posts")
+}
+
+model PostMedia {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String
+  mediaId   String
+  order     Int      @default(0)
+
+  @@map("post_media")
+}
+
+model PostTarget {
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+  postId              String
+  platform            PlatformType
+  connectedAccountId  String?
+  customCaption       String?
+  status              TargetPublishStatus  @default(PENDING)
+  scheduledTime       DateTime?
+  publishedAt         DateTime?
+  remotePostId        String?
+  publishedUrl        String?
+  lastErrorCode       String?
+  lastErrorMessage    String?
+  recipientPhone      String?
+  locationId          String?
+  ctaType             String?
+  ctaUrl              String?
+  attemptsCount       Int                  @default(0)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@map("post_targets")
+}
+
+model PublishingJob {
+  id              String             @id @default(auto()) @map("_id") @db.ObjectId
+  targetId        String
+  queueJobId      String?
+  idempotencyKey  String             @unique
+  runAt           DateTime
+  status          JobStatus          @default(QUEUED)
+  retryCount      Int                @default(0)
+  maxRetries      Int                @default(3)
+  lastError       String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@map("publishing_jobs")
+}
+
+model PublishingAttempt {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  jobId          String?
+  targetId       String
+  platform       PlatformType
+  status         String
+  startedAt      DateTime      @default(now())
+  finishedAt     DateTime?
+  errorCode      String?
+  errorMessage   String?
+  responsePayload Json?
+
+  @@map("publishing_attempts")
+}
+
+model WhatsAppRecipient {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  phone        String          @unique
+  name         String?
+  optInStatus  Boolean         @default(true)
+  optInDate    DateTime        @default(now())
+  notes        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@map("whatsapp_recipients")
+}
+
+model ConsentRecord {
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  recipientPhone   String
+  platform         PlatformType       @default(WHATSAPP)
+  consentType      String
+  consentGrantedAt DateTime           @default(now())
+  source           String             @default("MANUAL_OPT_IN")
+
+  @@map("consent_records")
+}
+
+model WebhookEvent {
+  id                String       @id @default(auto()) @map("_id") @db.ObjectId
+  provider          PlatformType
+  eventId           String?
+  eventType         String
+  payload           Json
+  signatureVerified Boolean      @default(false)
+  processed         Boolean      @default(false)
+  processedAt       DateTime?
+  createdAt         DateTime     @default(now())
+
+  @@map("webhook_events")
+}
+
+model ApplicationSetting {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("application_settings")
+}
+
+model AuditLog {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String?
+  action       String
+  resourceType String
+  resourceId   String?
+  details      Json?
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  @@map("audit_logs")
+}

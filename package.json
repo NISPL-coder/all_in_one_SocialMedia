@@ -1,0 +1,24 @@
+{
+  "name": "socialhub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unified Social Media Publishing Dashboard",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=@socialhub/api\" \"npm run dev --workspace=@socialhub/web\"",
+    "dev:all": "concurrently \"npm run dev --workspace=@socialhub/api\" \"npm run dev --workspace=@socialhub/web\" \"npm run dev --workspace=@socialhub/worker\"",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspace=@socialhub/api",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}
