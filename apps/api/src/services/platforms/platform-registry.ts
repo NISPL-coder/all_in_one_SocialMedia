@@ -3,7 +3,6 @@ import { IPlatformService } from './base-platform.service';
 import { LinkedInService } from './linkedin.service';
 import { FacebookService } from './facebook.service';
 import { InstagramService } from './instagram.service';
-import { WhatsAppService } from './whatsapp.service';
 import { GoogleBusinessService } from './google-business.service';
 
 export class PlatformRegistry {
@@ -13,7 +12,6 @@ export class PlatformRegistry {
     this.register(new LinkedInService());
     this.register(new FacebookService());
     this.register(new InstagramService());
-    this.register(new WhatsAppService());
     this.register(new GoogleBusinessService());
   }
 

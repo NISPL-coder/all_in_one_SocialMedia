@@ -235,10 +235,6 @@ export class PostsController {
           warnings.push(`${config.name} does not support document (PDF) attachments. The document will be excluded from this platform.`);
         }
 
-        if (platform === 'WHATSAPP' && !t.recipientPhone) {
-          errors.push('WhatsApp requires a destination recipient phone number.');
-        }
-
         if (platform === 'GOOGLE_BUSINESS' && !t.locationId) {
           errors.push('Google Business Profile requires a selected location.');
         }

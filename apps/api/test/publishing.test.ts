@@ -3,7 +3,6 @@ import assert from 'node:assert';
 import { LinkedInService } from '../src/services/platforms/linkedin.service';
 import { FacebookService } from '../src/services/platforms/facebook.service';
 import { InstagramService } from '../src/services/platforms/instagram.service';
-import { WhatsAppService } from '../src/services/platforms/whatsapp.service';
 import { GoogleBusinessService } from '../src/services/platforms/google-business.service';
 import { platformRegistry } from '../src/services/platforms/platform-registry';
 import { encryptToken, decryptToken, hashPassword, verifyPassword } from '../src/utils/crypto';
@@ -86,27 +85,11 @@ test('4. Platform Validation: Instagram requires media and rejects text-only pos
   assert.ok(pdfRes.errors.some(e => e.includes('PDF')));
 });
 
-test('5. Platform Validation: WhatsApp requires recipient phone number with country code', () => {
-  const service = new WhatsAppService();
-  const context = {
-    id: 'acc-wa-01',
-    platform: 'WHATSAPP' as const,
-    externalId: 'phone_num_id_123',
-    accountName: 'TechDesk',
-    accessToken: 'mock_token',
-  };
-
-  // Missing phone
-  const missingPhone = service.validate({ caption: 'Promo message', media: [] }, context);
-  assert.strictEqual(missingPhone.valid, false);
-  assert.ok(missingPhone.errors.some(e => e.includes('recipient phone number')));
-
-  // Valid phone
-  const validPhone = service.validate(
-    { caption: 'Promo message', media: [], recipientPhone: '+15552345678' },
-    context
-  );
-  assert.strictEqual(validPhone.valid, true);
+test('5. Platform Registry: Dispatches registered official platform engines', () => {
+  const service = platformRegistry.getService('INSTAGRAM');
+  assert.strictEqual(service.platform, 'INSTAGRAM');
+  const liService = platformRegistry.getService('LINKEDIN');
+  assert.strictEqual(liService.platform, 'LINKEDIN');
 });
 
 test('6. Platform Validation: Google Business Profile requires location ID', () => {
@@ -135,7 +118,7 @@ test('7. Publishing Engine: Multi-platform distribution and partial failure hand
       targets: [
         { platform: 'LINKEDIN', status: 'PENDING' },
         { platform: 'FACEBOOK', status: 'PENDING' },
-        { platform: 'WHATSAPP', status: 'PENDING', recipientPhone: '+15552345678' },
+        { platform: 'INSTAGRAM', status: 'PENDING' },
       ],
     },
   });
@@ -161,7 +144,7 @@ test('8. Retry Logic: Reprocesses only failed targets without duplicating succes
       status: 'PROCESSING',
       targets: [
         { platform: 'LINKEDIN', status: 'SUCCESS', remotePostId: 'urn:li:share:999' },
-        { platform: 'WHATSAPP', status: 'FAILED', lastErrorMessage: 'Simulated failure' },
+        { platform: 'GOOGLE_BUSINESS', status: 'FAILED', lastErrorMessage: 'Simulated failure' },
       ],
     },
   });

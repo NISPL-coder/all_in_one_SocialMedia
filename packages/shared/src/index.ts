@@ -2,7 +2,6 @@ export type PlatformType =
   | 'LINKEDIN'
   | 'FACEBOOK'
   | 'INSTAGRAM'
-  | 'WHATSAPP'
   | 'GOOGLE_BUSINESS';
 
 export type PostStatus =
@@ -110,27 +109,6 @@ export const PLATFORM_CONFIGS: Record<PlatformType, PlatformConfig> = {
       supportedVideoFormats: ['video/mp4', 'video/quicktime'],
       supportedDocFormats: [],
       aspectRatios: ['1:1 (Square)', '4:5 (Portrait)', '1.91:1 (Landscape)'],
-    },
-  },
-  WHATSAPP: {
-    id: 'WHATSAPP',
-    name: 'WhatsApp Business',
-    badge: 'Cloud API',
-    maxCharacters: 4096,
-    maxMediaItems: 1,
-    allowedMediaTypes: ['IMAGE', 'VIDEO', 'DOCUMENT'],
-    supportsDocuments: true,
-    supportsHashtags: false,
-    supportsCustomCTA: false,
-    requiresRecipient: true,
-    requiresLocation: false,
-    mediaConstraints: {
-      maxImageSizeMB: 5,
-      maxVideoSizeMB: 16,
-      maxDocSizeMB: 100,
-      supportedImageFormats: ['image/jpeg', 'image/png'],
-      supportedVideoFormats: ['video/mp4'],
-      supportedDocFormats: ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
     },
   },
   GOOGLE_BUSINESS: {

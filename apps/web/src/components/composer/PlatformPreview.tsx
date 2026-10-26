@@ -63,9 +63,6 @@ export const PlatformPreview: React.FC<PlatformPreviewProps> = ({
   if (platform === 'INSTAGRAM' && media.length === 0) {
     warnings.push('Instagram requires at least one image or video asset.');
   }
-  if (platform === 'WHATSAPP' && !recipientPhone) {
-    warnings.push('A designated recipient phone number is required to route this message.');
-  }
   if (platform === 'GOOGLE_BUSINESS' && !locationId) {
     warnings.push('A Google Business Profile location must be selected.');
   }
@@ -235,38 +232,6 @@ export const PlatformPreview: React.FC<PlatformPreviewProps> = ({
                 <span className="whitespace-pre-wrap">{caption}</span>
               </div>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider pt-1">Just now</p>
-            </div>
-          </div>
-        )}
-
-        {platform === 'WHATSAPP' && (
-          <div className="bg-[#efeae2] rounded-2xl border border-slate-300 shadow-sm max-w-sm w-full p-4 font-sans text-xs">
-            <div className="bg-white/90 backdrop-blur rounded-xl p-2.5 mb-3 border border-slate-200 text-center text-[10px] text-slate-500">
-              🔒 End-to-end encrypted business messaging • Recipient: {recipientPhone || '+1 (555) 234-5678'}
-            </div>
-
-            <div className="flex justify-end">
-              <div className="bg-[#d9fdd3] rounded-2xl rounded-tr-none p-3 shadow-xs max-w-[85%] space-y-2 border border-[#c4e9be]">
-                {imageMedia.length > 0 && (
-                  <img src={imageMedia[0].url} alt="WA" className="w-full rounded-xl object-cover max-h-48" />
-                )}
-                {docMedia.length > 0 && (
-                  <div className="p-2.5 rounded-xl bg-white/80 border border-slate-200 flex items-center gap-2">
-                    <FileText className="w-6 h-6 text-emerald-600 shrink-0" />
-                    <div className="overflow-hidden">
-                      <p className="font-medium text-[11px] truncate">{docMedia[0].fileName}</p>
-                      <p className="text-[9px] text-slate-400">PDF Document</p>
-                    </div>
-                  </div>
-                )}
-                <div className="text-[12px] text-slate-900 whitespace-pre-wrap leading-relaxed">
-                  {caption || 'WhatsApp broadcast message...'}
-                </div>
-                <div className="flex items-center justify-end gap-1 text-[9px] text-slate-500">
-                  <span>10:42 AM</span>
-                  <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
-                </div>
-              </div>
             </div>
           </div>
         )}

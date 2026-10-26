@@ -112,7 +112,7 @@ export const Dashboard: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Publishing Dashboard</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time status across LinkedIn, Facebook, Instagram, WhatsApp, and Google Business Profile.
+            Real-time status across LinkedIn, Facebook, Instagram, and Google Business Profile.
           </p>
         </div>
         <div className="flex items-center gap-2.5">

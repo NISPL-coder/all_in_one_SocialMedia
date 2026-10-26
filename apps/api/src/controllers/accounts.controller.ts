@@ -69,7 +69,7 @@ export class AccountsController {
             return;
           }
           const scopes = encodeURIComponent('pages_show_list,pages_read_engagement,pages_manage_posts');
-          authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${ENV.META_APP_ID}&redirect_uri=${encodeURIComponent(ENV.META_REDIRECT_URI)}&state=${state}&scope=${scopes}`;
+          authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${ENV.META_APP_ID}&redirect_uri=${encodeURIComponent(ENV.META_REDIRECT_URI)}&state=${state}&scope=${scopes}&auth_type=rerequest`;
           break;
         }
         case 'INSTAGRAM': {
@@ -81,8 +81,8 @@ export class AccountsController {
             });
             return;
           }
-          const scopes = encodeURIComponent('instagram_basic,instagram_content_publish,pages_show_list');
-          authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${ENV.META_APP_ID}&redirect_uri=${encodeURIComponent(ENV.META_INSTAGRAM_REDIRECT_URI)}&state=${state}&scope=${scopes}`;
+          const scopes = encodeURIComponent('instagram_basic,instagram_content_publish,pages_show_list,pages_read_engagement,business_management');
+          authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${ENV.META_APP_ID}&redirect_uri=${encodeURIComponent(ENV.META_INSTAGRAM_REDIRECT_URI)}&state=${state}&scope=${scopes}&auth_type=rerequest`;
           break;
         }
         case 'GOOGLE_BUSINESS': {
@@ -97,14 +97,6 @@ export class AccountsController {
           const scopes = encodeURIComponent('https://www.googleapis.com/auth/business.manage');
           authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${ENV.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(ENV.GOOGLE_REDIRECT_URI)}&response_type=code&scope=${scopes}&access_type=offline&state=${state}&prompt=consent`;
           break;
-        }
-        case 'WHATSAPP': {
-          ApiResponse.success(res, {
-            requiresCredentials: true,
-            authUrl: null,
-            message: 'WhatsApp Business Platform connects via Cloud API System User token and Phone Number ID in Settings.',
-          });
-          return;
         }
         default:
           ApiResponse.error(res, `Unsupported platform: ${platform}`, 400);
@@ -318,33 +310,82 @@ export class AccountsController {
         const pagesRes = await axios.get('https://graph.facebook.com/v21.0/me/accounts', {
           params: {
             access_token: longLivedToken,
-            fields: 'id,name,access_token,instagram_business_account{id,username,profile_picture_url,name}',
+            fields: 'id,name,access_token,category,instagram_business_account{id,username,profile_picture_url,name},connected_instagram_account{id,username,profile_picture_url,name}',
           },
         });
 
         const pages = pagesRes.data?.data || [];
-        const igPage = pages.find((p: any) => p.instagram_business_account);
+        let igAccount: any = null;
+        let matchedPage: any = null;
+
+        for (const p of pages) {
+          if (p.instagram_business_account) {
+            igAccount = p.instagram_business_account;
+            matchedPage = p;
+            break;
+          }
+          if (p.connected_instagram_account) {
+            igAccount = p.connected_instagram_account;
+            matchedPage = p;
+            break;
+          }
+          // Some Meta app configs require querying the specific Page node using the Page's access token
+          if (p.id && p.access_token) {
+            try {
+              const pageDetail = await axios.get(`https://graph.facebook.com/v21.0/${p.id}`, {
+                params: {
+                  fields: 'id,name,instagram_business_account{id,username,profile_picture_url,name},connected_instagram_account{id,username,profile_picture_url,name}',
+                  access_token: p.access_token,
+                },
+              });
+              if (pageDetail.data?.instagram_business_account) {
+                igAccount = pageDetail.data.instagram_business_account;
+                matchedPage = p;
+                break;
+              }
+              if (pageDetail.data?.connected_instagram_account) {
+                igAccount = pageDetail.data.connected_instagram_account;
+                matchedPage = p;
+                break;
+              }
+            } catch (pageErr) {
+              // Ignore individual page fetch errors and continue
+            }
+          }
+        }
+
         const existingIg = await db.connectedAccount.findMany({ where: { platform: 'INSTAGRAM' } });
 
-        if (igPage && igPage.instagram_business_account) {
-          const ig = igPage.instagram_business_account;
+        if (igAccount && matchedPage) {
           const igData = {
-            accountName: `@${ig.username || ig.name}`,
+            accountName: `@${igAccount.username || igAccount.name}`,
             accountType: 'IG_BUSINESS' as const,
-            avatarUrl: ig.profile_picture_url || '',
-            externalId: ig.id,
-            accessTokenEncrypted: encryptToken(igPage.access_token),
-            scopes: ['instagram_basic', 'instagram_content_publish', 'pages_show_list'],
+            avatarUrl: igAccount.profile_picture_url || '',
+            externalId: igAccount.id,
+            accessTokenEncrypted: encryptToken(matchedPage.access_token || longLivedToken),
+            scopes: ['instagram_basic', 'instagram_content_publish', 'pages_show_list', 'pages_read_engagement'],
             status: 'CONNECTED' as const,
-            metadata: { username: ig.username, linkedPageId: igPage.id },
+            metadata: { username: igAccount.username, linkedPageId: matchedPage.id, pageName: matchedPage.name },
           };
           if (existingIg.length > 0) {
             await db.connectedAccount.update({ where: { id: existingIg[0].id }, data: igData });
           } else {
             await db.connectedAccount.create({ data: { platform: 'INSTAGRAM', ...igData } });
           }
+        } else if (pages.length === 0) {
+          res.redirect(
+            `${ENV.FRONTEND_URL}/accounts?error=${encodeURIComponent(
+              'No Facebook Pages found. During Facebook Login, please ensure you check the box next to your Facebook Page, or create a Facebook Page if you do not have one yet.'
+            )}`
+          );
+          return;
         } else {
-          res.redirect(`${ENV.FRONTEND_URL}/accounts?error=${encodeURIComponent('No Instagram Professional Account linked to your Facebook Pages. Please link your Instagram account to a Facebook Page in Meta Business Suite.')}`);
+          const pageNames = pages.map((p: any) => p.name).join(', ');
+          res.redirect(
+            `${ENV.FRONTEND_URL}/accounts?error=${encodeURIComponent(
+              `Found Facebook Page(s) "${pageNames}", but no linked Instagram Professional account was detected. Please go to Facebook Page Settings > Linked Accounts > Instagram and connect your Instagram Professional account.`
+            )}`
+          );
           return;
         }
       }
@@ -530,12 +571,33 @@ export class AccountsController {
             } catch (e2) {
               // Might be user submitting token with explicit externalId
             }
+
+            // 3. If still not resolved or generic personal Facebook ID, check linked Instagram Business Account on /me/accounts
+            try {
+              const pagesRes = await axios.get('https://graph.facebook.com/v21.0/me/accounts', {
+                params: {
+                  access_token: rawToken,
+                  fields: 'id,name,access_token,instagram_business_account{id,username,profile_picture_url,name}',
+                },
+              });
+              const pages = pagesRes.data?.data || [];
+              const igPage = pages.find((p: any) => p.instagram_business_account);
+              if (igPage && igPage.instagram_business_account) {
+                const ig = igPage.instagram_business_account;
+                igUserId = ig.id;
+                igUsername = ig.username || ig.name || igUsername;
+                igAvatar = ig.profile_picture_url || igAvatar;
+                finalTokenToStore = igPage.access_token || rawToken;
+              }
+            } catch (e3) {
+              // Not a user token with pages
+            }
           }
 
           finalName = igUsername ? (igUsername.startsWith('@') ? igUsername : `@${igUsername}`) : (accountName || '@instagram_account');
           finalExternalId = igUserId || externalId || 'me';
           avatarUrl = igAvatar;
-          finalTokenToStore = rawToken;
+          finalTokenToStore = finalTokenToStore || rawToken;
           verifiedScopes = ['instagram_basic', 'instagram_content_publish'];
         } catch (igErr: any) {
           const errMsg = igErr.response?.data?.error?.message || igErr.message;

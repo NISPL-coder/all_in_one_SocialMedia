@@ -27,12 +27,6 @@ export class SettingsController {
           appIdMasked: ENV.META_APP_ID ? `${ENV.META_APP_ID.slice(0, 4)}...` : null,
           redirectUri: ENV.META_INSTAGRAM_REDIRECT_URI,
         },
-        whatsapp: {
-          configured: Boolean(ENV.WHATSAPP_PHONE_NUMBER_ID && ENV.WHATSAPP_ACCESS_TOKEN),
-          phoneNumberIdMasked: ENV.WHATSAPP_PHONE_NUMBER_ID ? `${ENV.WHATSAPP_PHONE_NUMBER_ID.slice(0, 4)}...` : null,
-          webhookUrl: `${ENV.BACKEND_URL}/api/webhooks/whatsapp`,
-          verifyToken: ENV.WHATSAPP_WEBHOOK_VERIFY_TOKEN,
-        },
         googleBusiness: {
           configured: Boolean(ENV.GOOGLE_CLIENT_ID && ENV.GOOGLE_CLIENT_SECRET),
           clientIdMasked: ENV.GOOGLE_CLIENT_ID ? `${ENV.GOOGLE_CLIENT_ID.slice(0, 8)}...` : null,

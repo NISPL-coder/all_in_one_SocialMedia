@@ -171,7 +171,6 @@ export const ConnectedAccounts: React.FC = () => {
     'LINKEDIN',
     'FACEBOOK',
     'INSTAGRAM',
-    'WHATSAPP',
     'GOOGLE_BUSINESS',
   ];
 
@@ -411,6 +410,10 @@ export const ConnectedAccounts: React.FC = () => {
                 <p className="text-[11px] text-slate-400 mt-1">
                   {modalPlatform === 'LINKEDIN'
                     ? 'Requires "w_member_social" publishing permission. OpenID Connect ("openid profile") is optional for auto-fetching name/avatar.'
+                    : modalPlatform === 'INSTAGRAM'
+                    ? 'Accepts a Meta Page Access Token or User Token with "instagram_basic" and "instagram_content_publish" permissions.'
+                    : modalPlatform === 'FACEBOOK'
+                    ? 'Accepts a Facebook Page Access Token or User Token with "pages_manage_posts" permission.'
                     : 'Encrypted securely at rest using AES-256-GCM.'}
                 </p>
               </div>
@@ -423,7 +426,7 @@ export const ConnectedAccounts: React.FC = () => {
                   type="text"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="e.g. My LinkedIn Profile or Company Name"
+                  placeholder="e.g. My Profile or Business Name"
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
                 />
               </div>
@@ -471,7 +474,7 @@ export const ConnectedAccounts: React.FC = () => {
                   {isSavingToken ? (
                     <>
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Verifying with LinkedIn...</span>
+                      <span>Verifying with {modalPlatform ? PLATFORM_CONFIGS[modalPlatform].name : 'Platform'}...</span>
                     </>
                   ) : (
                     <>

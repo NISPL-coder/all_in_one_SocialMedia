@@ -15,7 +15,6 @@ import {
   AlertCircle,
   HelpCircle,
   ExternalLink,
-  Smartphone,
   MapPin,
   Smile,
   Hash,
@@ -45,7 +44,6 @@ export const CreatePost: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   // Platform Specific Extra Configs
-  const [recipientPhone, setRecipientPhone] = useState('+15552345678');
   const [locationId, setLocationId] = useState('locations/10928374619283746192');
   const [ctaType, setCtaType] = useState('LEARN_MORE');
   const [ctaUrl, setCtaUrl] = useState('https://techvision.io');
@@ -130,7 +128,6 @@ export const CreatePost: React.FC = () => {
           platform: p,
           connectedAccountId: acc?.id || undefined,
           customCaption: platformOverrides[p] || undefined,
-          recipientPhone: p === 'WHATSAPP' ? recipientPhone : undefined,
           locationId: p === 'GOOGLE_BUSINESS' ? locationId : undefined,
           ctaType: p === 'GOOGLE_BUSINESS' ? ctaType : undefined,
           ctaUrl: p === 'GOOGLE_BUSINESS' ? ctaUrl : undefined,
@@ -234,7 +231,7 @@ export const CreatePost: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Unified Content Composer</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Create in one place, customize per channel, and publish across all 5 networks.
+            Create in one place, customize per channel, and publish across all 4 networks.
           </p>
         </div>
 
@@ -277,7 +274,7 @@ export const CreatePost: React.FC = () => {
                 1. Select Target Platforms
               </span>
               <span className="text-[11px] text-slate-400">
-                {selectedPlatforms.length} of 5 selected
+                {selectedPlatforms.length} of 4 selected
               </span>
             </div>
 
@@ -463,23 +460,6 @@ export const CreatePost: React.FC = () => {
               <span className="text-[11px] text-slate-400">Customize per platform</span>
             </div>
 
-            {/* WhatsApp Routing */}
-            {selectedPlatforms.includes('WHATSAPP') && (
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
-                  <Smartphone className="w-4 h-4 text-emerald-600" />
-                  <span>WhatsApp Business Recipient</span>
-                </div>
-                <input
-                  type="text"
-                  value={recipientPhone}
-                  onChange={(e) => setRecipientPhone(e.target.value)}
-                  placeholder="+15551234567 (with country code)"
-                  className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500"
-                />
-              </div>
-            )}
-
             {/* Google Business CTA */}
             {selectedPlatforms.includes('GOOGLE_BUSINESS') && (
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
@@ -659,7 +639,6 @@ export const CreatePost: React.FC = () => {
             platform={activePreviewTab}
             caption={platformOverrides[activePreviewTab] || mainCaption}
             media={uploadedMedia}
-            recipientPhone={recipientPhone}
             locationId={locationId}
             ctaType={ctaType}
             ctaUrl={ctaUrl}

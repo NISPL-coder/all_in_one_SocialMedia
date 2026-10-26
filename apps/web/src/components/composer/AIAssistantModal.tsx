@@ -75,7 +75,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
               rows={3}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g. We just released SocialHub 2.0 with unified scheduling and WhatsApp Cloud API support..."
+              placeholder="e.g. We just launched our new Q4 product update with cross-platform social publishing..."
               className="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
             />
           </div>

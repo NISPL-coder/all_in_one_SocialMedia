@@ -24,7 +24,6 @@ Return ONLY valid JSON matching this schema:
     "LINKEDIN": "string",
     "FACEBOOK": "string",
     "INSTAGRAM": "string",
-    "WHATSAPP": "string",
     "GOOGLE_BUSINESS": "string"
   },
   "headlineSuggestions": ["string"]
@@ -78,7 +77,6 @@ Return ONLY valid JSON matching this schema:
         LINKEDIN: `In today's fast-evolving landscape, adaptability and execution define success.\n\nRegarding ${cleanPrompt}: organizations that actively embrace agility and customer-centric problem solving consistently outperform the competition.\n\nHere are three key principles we focus on:\n1. Purpose-driven clarity\n2. Measurable execution\n3. Continuous innovation\n\nHow is your organization approaching this transition this quarter? Join the discussion below.`,
         FACEBOOK: `Hey everyone! 👋 Big updates to share with our community today!\n\n${cleanPrompt} 🙌\n\nWe couldn't have achieved this milestone without your continuous support. Click the link in the comments to explore the full story, or drop a ❤️ if you're as excited as we are!`,
         INSTAGRAM: `Big milestones start with bold ideas. ✨\n\n${cleanPrompt}\n\nSave this post for later and share it with someone who needs to see this! 📌 Tap the link in our bio to learn more.\n\n${sampleHashtags.join(' ')}`,
-        WHATSAPP: `Hello! 📢 Quick update from TechVision:\n\n${cleanPrompt}\n\nFor more details or to schedule a priority consultation, reply directly to this message or visit our official portal. Have a great day!`,
         GOOGLE_BUSINESS: `Special Update: ${cleanPrompt}. Visit our location or check our official website for full operating hours, consultations, and the latest releases.`,
       },
       headlineSuggestions: [

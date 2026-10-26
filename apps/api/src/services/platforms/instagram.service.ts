@@ -1,3 +1,7 @@
+import path from 'path';
+import fs from 'fs';
+import sharp from 'sharp';
+import FormData from 'form-data';
 import axios from 'axios';
 import { PlatformType, PublishResult } from '@socialhub/shared';
 import { IPlatformService, PlatformAccountContext, PlatformPublishPayload } from './base-platform.service';
@@ -5,6 +9,79 @@ import { IPlatformService, PlatformAccountContext, PlatformPublishPayload } from
 export class InstagramService implements IPlatformService {
   readonly platform: PlatformType = 'INSTAGRAM';
   private apiVersion = 'v21.0';
+
+  private async prepareInstagramMediaUrl(rawUrl: string): Promise<string> {
+    const isLocalhost = rawUrl.includes('localhost') || rawUrl.includes('127.0.0.1');
+    const isWebp = rawUrl.toLowerCase().endsWith('.webp');
+
+    // If it's already a public non-webp URL, return as-is
+    if (!isLocalhost && !isWebp) {
+      return rawUrl;
+    }
+
+    try {
+      let filename = 'media.jpg';
+      try {
+        const urlObj = new URL(rawUrl);
+        filename = path.basename(urlObj.pathname);
+      } catch (e) {
+        filename = path.basename(rawUrl);
+      }
+
+      // Check standard uploads directory
+      const uploadDirs = [
+        path.resolve(process.cwd(), 'apps/api/uploads', filename),
+        path.resolve(process.cwd(), 'uploads', filename),
+        path.resolve(__dirname, '../../../uploads', filename),
+      ];
+
+      const localFilePath = uploadDirs.find(p => fs.existsSync(p));
+      let imageBuffer: Buffer;
+      let finalFilename = filename;
+
+      if (localFilePath) {
+        if (isWebp) {
+          imageBuffer = await sharp(localFilePath).jpeg({ quality: 92 }).toBuffer();
+          finalFilename = filename.replace(/\.webp$/i, '.jpg');
+        } else {
+          imageBuffer = fs.readFileSync(localFilePath);
+        }
+      } else {
+        const res = await axios.get(rawUrl, { responseType: 'arraybuffer' });
+        const buf = Buffer.from(res.data);
+        if (isWebp) {
+          imageBuffer = await sharp(buf).jpeg({ quality: 92 }).toBuffer();
+          finalFilename = 'instagram-media.jpg';
+        } else {
+          imageBuffer = buf;
+        }
+      }
+
+      // Upload to public image host so Meta's cloud servers can download it
+      const form = new FormData();
+      form.append('reqtype', 'fileupload');
+      form.append('fileToUpload', imageBuffer, {
+        filename: finalFilename.toLowerCase().endsWith('.jpg') || finalFilename.toLowerCase().endsWith('.jpeg') || finalFilename.toLowerCase().endsWith('.png')
+          ? finalFilename
+          : `${finalFilename}.jpg`,
+        contentType: 'image/jpeg',
+      });
+
+      const catboxRes = await axios.post('https://catbox.moe/user/api.php', form, {
+        headers: form.getHeaders(),
+        timeout: 15000,
+      });
+
+      if (catboxRes.data && typeof catboxRes.data === 'string' && catboxRes.data.startsWith('http')) {
+        console.log(`[Instagram Service] Converted/Hosted image publicly for Meta: ${catboxRes.data.trim()}`);
+        return catboxRes.data.trim();
+      }
+    } catch (err: any) {
+      console.warn('[Instagram Service] Public image preparation warning:', err.message);
+    }
+
+    return rawUrl;
+  }
 
   validate(payload: PlatformPublishPayload, context: PlatformAccountContext): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
@@ -70,13 +147,14 @@ export class InstagramService implements IPlatformService {
       let creationId: string;
 
       if (images.length === 1 && videos.length === 0) {
+        const publicImageUrl = await this.prepareInstagramMediaUrl(images[0].url);
         // Single Image Container
         const containerRes = await axios.post(
           `https://graph.facebook.com/${this.apiVersion}/${igUserId}/media`,
           null,
           {
             params: {
-              image_url: images[0].url,
+              image_url: publicImageUrl,
               caption: payload.caption,
               access_token: context.accessToken,
             },
@@ -109,7 +187,9 @@ export class InstagramService implements IPlatformService {
             is_carousel_item: true,
             access_token: context.accessToken,
           };
-          if (item.mediaType === 'IMAGE') params.image_url = item.url;
+          if (item.mediaType === 'IMAGE') {
+            params.image_url = await this.prepareInstagramMediaUrl(item.url);
+          }
           if (item.mediaType === 'VIDEO') {
             params.media_type = 'VIDEO';
             params.video_url = item.url;

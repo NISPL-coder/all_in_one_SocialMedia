@@ -19,7 +19,7 @@ export class AnalyticsController {
       const draftPosts = posts.filter((p: any) => p.status === 'DRAFT').length;
       const failedPosts = posts.filter((p: any) => p.status === 'FAILED').length;
 
-      const platforms: PlatformType[] = ['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'WHATSAPP', 'GOOGLE_BUSINESS'];
+      const platforms: PlatformType[] = ['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'GOOGLE_BUSINESS'];
       const platformStats: Record<string, any> = {};
 
       for (const plt of platforms) {
@@ -66,7 +66,7 @@ export class AnalyticsController {
       const targets = await db.postTarget.findMany();
       const accounts = await db.connectedAccount.findMany();
 
-      const platforms: PlatformType[] = ['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'WHATSAPP', 'GOOGLE_BUSINESS'];
+      const platforms: PlatformType[] = ['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'GOOGLE_BUSINESS'];
       const data = platforms.map((p) => {
         const pTargets = targets.filter((t: any) => t.platform === p);
         const acc = accounts.find((a: any) => a.platform === p);

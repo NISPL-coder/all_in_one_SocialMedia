@@ -137,7 +137,7 @@ export const AppLayout: React.FC = () => {
             </button>
             <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>All 5 Channel Engines Operational</span>
+              <span>All 4 Channels Operational</span>
             </div>
           </div>
 
@@ -175,7 +175,7 @@ export const AppLayout: React.FC = () => {
                     </div>
                     <div className="p-2 rounded-lg bg-brand-50/50 border border-brand-100 text-xs">
                       <p className="font-medium text-brand-900">Official APIs Ready</p>
-                      <p className="text-brand-700 text-[11px] mt-0.5">LinkedIn, Meta, WhatsApp & Google ready.</p>
+                      <p className="text-brand-700 text-[11px] mt-0.5">LinkedIn, Facebook, Instagram & Google ready.</p>
                     </div>
                   </div>
                 </div>
